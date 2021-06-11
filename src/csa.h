@@ -90,6 +90,8 @@ void fill_csa_pars (
 void make_station_sets (
         const std::vector <size_t> &start_stations,
         const std::vector <size_t> &end_stations,
+        const size_t start_stations,
+        const size_t end_stations,
         std::unordered_set <size_t> &start_stations_set,
         std::unordered_set <size_t> &end_stations_set);
 
@@ -102,7 +104,7 @@ void make_transfer_map (
         Rcpp::DataFrame &transfers);
 
 void get_earliest_connection (
-        const std::vector <size_t> &start_stations,
+        const size_t start_stations,
         const int &start_time,
         const TransferMapType &transfer_map,
         std::vector <int> &earliest_connection);
@@ -145,7 +147,7 @@ Rcpp::DataFrame rcpp_csa (
         Rcpp::DataFrame transfers,
         const size_t nstations,
         const size_t ntrips,
-        const std::vector <size_t> start_stations,
-        const std::vector <size_t> end_stations,
+        const size_t start_stations,
+        const size_t end_stations,
         const int start_time,
         const int max_transfers);

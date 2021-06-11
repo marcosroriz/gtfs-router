@@ -89,7 +89,18 @@ gtfs_route <- function (gtfs, from, to, start_time = NULL, day = NULL,
                         include_ids = FALSE, grep_fixed = TRUE,
                         max_transfers = NA,
                         from_to_are_ids = FALSE, quiet = FALSE) {
-
+    
+    
+    print("INIT")
+    print("FROM")
+    print(from)
+    print("TO")
+    print(to)
+    print("START_TIME")
+    print(start_time)
+    print("FROM_TO_ARE_IDS")
+    print(from_to_are_ids)
+    
     if (length (from) != length (to))
         stop ("from and to must have the same length")
 
@@ -172,9 +183,23 @@ gtfs_csa <- function (gtfs, start_stns, end_stns, start_time,
 
     if (is.na (max_transfers))
         max_transfers <- .Machine$integer.max
+    
+    print("Vou chamar a rotina")
+    print("PARAMETROS")
+    print(gtfs$timetable)
+    print(gtfs$transfers)
+    print(nrow (gtfs$stop_ids))
+    print(nrow (gtfs$trip_ids))
+    print(start_stns)
+    print(typeof(start_stns))
+    print(end_stns)
+    print(typeof(end_stns))
+    print(start_time)
+    print(start_time)
+    print(max_transfers)
     route <- rcpp_csa (gtfs$timetable, gtfs$transfers,
                        nrow (gtfs$stop_ids), nrow (gtfs$trip_ids),
-                       start_stns, end_stns, start_time, max_transfers)
+                       as.integer(start_stns), as.integer(end_stns), start_time, max_transfers)
     if (nrow (route) == 0)
         return (NULL)
 

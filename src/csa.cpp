@@ -21,45 +21,52 @@ Rcpp::DataFrame rcpp_csa (Rcpp::DataFrame timetable,
         Rcpp::DataFrame transfers,
         const size_t nstations,
         const size_t ntrips,
-        const std::vector <size_t> start_stations,
-        const std::vector <size_t> end_stations,
+        const size_t start_stations,
+        const size_t end_stations,
         const int start_time,
         const int max_transfers)
 {
 
+    Rcpp::Rcout << "CHEGUEI NO C++ " << std::endl;
+    Rcpp::Rcout << "nstations " << nstations << std::endl;
+    Rcpp::Rcout << "ntrips " << ntrips << std::endl;
+    Rcpp::Rcout << "start_stations " << start_stations << std::endl;
+    Rcpp::Rcout << "end_stations " << end_stations << std::endl;
+    Rcpp::Rcout << "start_time " << start_time << std::endl;
+    Rcpp::Rcout << "max_transfers " << max_transfers << std::endl;
+    
     CSA_Parameters csa_pars;
-    csa::fill_csa_pars (csa_pars, max_transfers, start_time,
-            static_cast <size_t> (timetable.nrow ()), ntrips, nstations);
-
+    csa::fill_csa_pars (csa_pars, max_transfers, start_time, static_cast <size_t> (timetable.nrow ()), ntrips, nstations);
+    Rcpp::Rcout << "fill_csa_pars " << std::endl;
+    
     std::unordered_set <size_t> start_stations_set, end_stations_set;
-    csa::make_station_sets (start_stations, end_stations,
-            start_stations_set, end_stations_set);
-
+    csa::make_station_sets (start_stations, end_stations, start_stations_set, end_stations_set);
+    Rcpp::Rcout << "make_station_sets " << std::endl;
+    
     CSA_Inputs csa_in;
     csa::make_transfer_map (csa_in.transfer_map, transfers);
-
+    Rcpp::Rcout << "make_transfer_map " << std::endl;
+    
     // The csa_out vectors use nstations + 1 because it's 1-indexed throughout,
     // and the first element is ignored.
     const size_t n = csa_pars.nstations + 1;
     CSA_Outputs csa_out (n);
 
-    csa::get_earliest_connection (start_stations, csa_pars.start_time,
-            csa_in.transfer_map, csa_out.earliest_connection);
-
+    csa::get_earliest_connection (start_stations, csa_pars.start_time, csa_in.transfer_map, csa_out.earliest_connection);
+    Rcpp::Rcout << "get_earliest_connection " << std::endl;
+    
     csa::csa_in_from_df (timetable, csa_in);
+    Rcpp::Rcout << "csa_in_from_df " << std::endl;
+    
+    CSA_Return csa_ret = csa::main_csa_loop (csa_pars, start_stations_set, end_stations_set, csa_in, csa_out);
+    Rcpp::Rcout << "csa::main_csa_loop " << std::endl;
+    
+    size_t route_len = csa::get_route_length (csa_out, csa_pars, csa_ret.end_station);
 
-    CSA_Return csa_ret = csa::main_csa_loop (csa_pars, start_stations_set,
-            end_stations_set, csa_in, csa_out);
-
-    size_t route_len = csa::get_route_length (csa_out, csa_pars,
-            csa_ret.end_station);
-
-    std::vector <size_t> end_station_out (route_len),
-        trip_out (route_len, INFINITE_INT);
+    std::vector <size_t> end_station_out (route_len), trip_out (route_len, INFINITE_INT);
     std::vector <int> time_out (route_len);
 
-    csa::extract_final_trip (csa_out, csa_ret, end_station_out,
-            trip_out, time_out);
+    csa::extract_final_trip (csa_out, csa_ret, end_station_out,trip_out, time_out);
 
     Rcpp::DataFrame res = Rcpp::DataFrame::create (
             Rcpp::Named ("stop_number") = end_station_out,
@@ -89,16 +96,14 @@ void csa::fill_csa_pars (
 // make start and end stations into std::unordered_sets to allow constant-time
 // lookup.
 void csa::make_station_sets (
-        const std::vector <size_t> &start_stations,
-        const std::vector <size_t> &end_stations,
+        const size_t start_stations,
+        const size_t end_stations,
         std::unordered_set <size_t> &start_stations_set,
         std::unordered_set <size_t> &end_stations_set)
 {
 
-    for (auto i: start_stations)
-        start_stations_set.emplace (i);
-    for (auto i: end_stations)
-        end_stations_set.emplace (i);
+    start_stations_set.emplace (start_stations);
+    end_stations_set.emplace (end_stations);
 }
 
 void csa::csa_in_from_df (
@@ -124,16 +129,41 @@ void csa::make_transfer_map (
         Rcpp::DataFrame &transfers)
 {
 
-    transfer_map.clear ();
-    std::vector <size_t> trans_from = transfers ["from_stop_id"],
+    Rcpp::Rcout << "DENTRO DO TRANSFER MAP " << std::endl;
+    
+    transfer_map.clear();
+    
+    
+    Rcpp::Rcout << "TYPE FROM STOP ID: " << TYPEOF(transfers["from_stop_id"]) << std::endl;
+    Rcpp::Rcout << "TYPE TO STOP ID: " << TYPEOF(transfers["to_stop_id"]) << std::endl;
+    // Rcpp::Rcout << "TYPE TO STOP_ID " << TYPEOF(transfers["to_stop_id"]) << std::endl;
+    
+    std::vector <std::string> trans_from = transfers ["from_stop_id"],
         trans_to = transfers ["to_stop_id"];
+    
+    Rcpp::Rcout << "transform " << std::endl;
+    
     std::vector <int> trans_time = transfers ["min_transfer_time"];
-    for (size_t i = 0; i < static_cast <size_t> (transfers.nrow ()); i++)
-        if (trans_from [i] != trans_to [i])
+    Rcpp::Rcout << "trans_time " << std::endl;
+
+    Rcpp::Rcout << "ENTRANDO NO LAÇO" << std::endl;
+    for (size_t i = 0; i < static_cast <size_t> (transfers.nrow ()); i++) {
+        // 
+        // Rcpp::Rcout << "FROM" << trans_from [i] << std::endl;
+        // Rcpp::Rcout << "TO" << trans_to [i] << std::endl;
+        // 
+        // int c1 = trans_from[i].compare(trans_from[i]);
+        // Rcpp::Rcout << "c1" << c1 << std::endl;
+        
+        // int c2 = trans_from[i].compare(trans_to[i]);
+        // Rcpp::Rcout << "c2" << c2 << std::endl;
+        
+        if (trans_from[i].compare(trans_to[i]) != 0)
         {
-            std::unordered_map <size_t, int> transfer_pair; // station, time
-            if (transfer_map.find (trans_from [i]) ==
-                    transfer_map.end ())
+            
+            std::unordered_map <std::string, int> transfer_pair; // station, time
+            // if (transfer_map.find(trans_from[i]).compare(transfer_map.end()) == 0)
+            if (transfer_map.find(trans_from[i]) == transfer_map.end())
             {
                 transfer_pair.clear ();
                 transfer_pair.emplace (trans_to [i], trans_time [i]);
@@ -145,29 +175,30 @@ void csa::make_transfer_map (
                 transfer_map [trans_from [i] ] = transfer_pair;
             }
         }
+    }
+    Rcpp::Rcout << "FINALIZOU TRANSFER MAP " << std::endl;
+    
 }
 
 void csa::get_earliest_connection (
-        const std::vector <size_t> &start_stations,
+        const size_t start_stations,
         const int &start_time,
         const TransferMapType &transfer_map,
         std::vector <int> &earliest_connection)
 {
 
-    for (size_t i = 0; i < start_stations.size (); i++)
-    {
-        earliest_connection [start_stations [i]] = start_time;
-        if (transfer_map.find (start_stations [i]) !=
-                transfer_map.end ())
+    // for (size_t i = 0; i < start_stations.size (); i++)
+    // {
+        earliest_connection [start_stations] = start_time;
+        if (transfer_map.find (start_stations) != transfer_map.end ())
         {
-            std::unordered_map <size_t, int> transfer_pair =
-                transfer_map.at (start_stations [i]);
+            std::unordered_map <size_t, int> transfer_pair = transfer_map.at (start_stations);
             // Don't penalise these first footpaths:
             for (auto t: transfer_pair)
                 earliest_connection [t.first] = start_time;
                 //earliest_connection [t.first] = start_time + t.second;
         }
-    }
+    // }
 }
 
 CSA_Return csa::main_csa_loop (
