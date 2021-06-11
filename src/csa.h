@@ -88,8 +88,6 @@ void fill_csa_pars (
         size_t nstations);
 
 void make_station_sets (
-        const std::vector <size_t> &start_stations,
-        const std::vector <size_t> &end_stations,
         const size_t start_stations,
         const size_t end_stations,
         std::unordered_set <size_t> &start_stations_set,
