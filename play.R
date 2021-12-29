@@ -11,8 +11,8 @@ gtfs$transfers <- gtfs_transfer_table(
   # network_times = TRUE
 )
 
-# gtfs$transfers$from_stop_id_tx <- lapply(gtfs$transfers$from_stop_id, function(i) { which(i == gtfs$stop_ids)[[1]] })
-# gtfs$transfers$to_stop_id_tx <- lapply(gtfs$transfers$to_stop_id, function(i) { which(i == gtfs$stop_ids)[[1]] })
+gtfs$transfers$from_stop_id_tx <- as.integer(lapply(gtfs$transfers$from_stop_id, function(i) { which(i == gtfs$stop_ids)[[1]] }))
+gtfs$transfers$to_stop_id_tx <- as.integer(lapply(gtfs$transfers$to_stop_id, function(i) { which(i == gtfs$stop_ids)[[1]] }))
 
 infrom <- "31502"
 into <- "06363"

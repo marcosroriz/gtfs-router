@@ -131,16 +131,15 @@ void csa::make_transfer_map (
 
     Rcpp::Rcout << "DENTRO DO TRANSFER MAP " << std::endl;
     
-    transfer_map.clear();
-    
+    transfer_map.clear ();
     
     Rcpp::Rcout << "TYPE FROM STOP ID: " << TYPEOF(transfers["from_stop_id"]) << std::endl;
+    Rcpp::Rcout << "TYPE FROM STOP ID TRANSF: " << TYPEOF(transfers["from_stop_id_tx"]) << std::endl;
     Rcpp::Rcout << "TYPE TO STOP ID: " << TYPEOF(transfers["to_stop_id"]) << std::endl;
-    // Rcpp::Rcout << "TYPE TO STOP_ID " << TYPEOF(transfers["to_stop_id"]) << std::endl;
-    
-    std::vector <std::string> trans_from = transfers ["from_stop_id"],
-        trans_to = transfers ["to_stop_id"];
-    
+    Rcpp::Rcout << "TYPE TO STOP ID TRANSF: " << TYPEOF(transfers["to_stop_id_tx"]) << std::endl;
+
+
+    std::vector <size_t> trans_from = transfers ["from_stop_id_tx"], trans_to = transfers ["to_stop_id_tx"];
     Rcpp::Rcout << "transform " << std::endl;
     
     std::vector <int> trans_time = transfers ["min_transfer_time"];
@@ -148,22 +147,11 @@ void csa::make_transfer_map (
 
     Rcpp::Rcout << "ENTRANDO NO LAÇO" << std::endl;
     for (size_t i = 0; i < static_cast <size_t> (transfers.nrow ()); i++) {
-        // 
-        // Rcpp::Rcout << "FROM" << trans_from [i] << std::endl;
-        // Rcpp::Rcout << "TO" << trans_to [i] << std::endl;
-        // 
-        // int c1 = trans_from[i].compare(trans_from[i]);
-        // Rcpp::Rcout << "c1" << c1 << std::endl;
-        
-        // int c2 = trans_from[i].compare(trans_to[i]);
-        // Rcpp::Rcout << "c2" << c2 << std::endl;
-        
-        if (trans_from[i].compare(trans_to[i]) != 0)
+        if (trans_from [i] != trans_to [i])
         {
-            
-            std::unordered_map <std::string, int> transfer_pair; // station, time
-            // if (transfer_map.find(trans_from[i]).compare(transfer_map.end()) == 0)
-            if (transfer_map.find(trans_from[i]) == transfer_map.end())
+            std::unordered_map <size_t, int> transfer_pair; // station, time
+            if (transfer_map.find (trans_from [i]) ==
+                transfer_map.end ())
             {
                 transfer_pair.clear ();
                 transfer_pair.emplace (trans_to [i], trans_time [i]);
@@ -176,6 +164,7 @@ void csa::make_transfer_map (
             }
         }
     }
+        
     Rcpp::Rcout << "FINALIZOU TRANSFER MAP " << std::endl;
     
 }
